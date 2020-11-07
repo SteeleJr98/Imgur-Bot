@@ -1,6 +1,7 @@
 # imports
 import configparser
 from imgurpython import ImgurClient
+from imgurpython.helpers.error import ImgurClientError
 import time
 
 
@@ -19,37 +20,64 @@ client = ImgurClient(client_id, client_secret)
 day = 999
 item_num = 0
 pagenum = 0
+errors = 0
+post_total = 0
+image_total = 0
 
-while day > 0:
+while day > 5:
     # get all submissions from an account
     user_posts = client.get_account_submissions(config.get('users', 'target_user'), page=pagenum)
+
     for u_post in user_posts:
-
-        # check if 'cropped is in post title'
-        if 'Cropped' in u_post.title:
-
-            # hacky bs to pull a number from the title don't think about it too much
-            day = int(''.join(filter(str.isdigit, u_post.title)))
-
-            # print some info about the post
-            print(f'Title: {u_post.title}')
-            print(f'Link: {u_post.link}')
-            print(f'Day number: {day}')
-            print(f'Item number: {item_num}')
-            print(f'Page: {pagenum}\n')
-
-            # this needs to be redone but works in a proof of concept
-            item_num += 1
-            if item_num == 15:
-                item_num = 0
-                pagenum += 1
-            # sleep time to make it look cool
-            #time.sleep(0.1)
+        try:
+            images = client.get_album_images(u_post.id)
 
 
+            # check if 'cropped is in post title'
+            if 'cropped' in u_post.title.lower() or 'tasteful' in u_post.title.lower():
+
+
+                # hacky bs to pull a number from the title don't think about it too much
+                try:
+                    day = int(''.join(filter(str.isdigit, u_post.title)))
+                except ValueError:
+                    day -= 1
+                # print some info about the post
+                print(f'Title: {u_post.title}')
+                print(f'Link: {u_post.link}')
+                print(f'Day number: {day}')
+                print('Images:{')
+                for image in images:
+                    print(image.link)
+                    image_total += 1
+                print('}')
+                print(f'Item number: {item_num}')
+                print(f'Page: {pagenum}')
+                print(f'Errors: {errors}\n')
+
+                item_num += 1
+
+        except ImgurClientError as e:
+            print('Oops, an error occured...')
+            print('v______ERRORS______v')
+            print(f'Error Message: {e.error_message}')
+            print(f'Status code: {e.status_code}')
+            print('Here\'s the link anyway :/')
+            print(f'Link: {u_post.link}\n')
+            errors += 1
 
 
 
+
+
+    pagenum += 1
+    #print(f'TESTING: {pagenum}')
+
+
+print('---RESULTS---')
+print(f'Total posts: {item_num}')
+print(f'Total images: {image_total}')
+print(f'Errors: {errors}')
 
 
 
