@@ -2,8 +2,10 @@
 import configparser
 from imgurpython import ImgurClient
 from imgurpython.helpers.error import ImgurClientError
-import time
+from datetime import datetime
 
+# setting up timer
+start_time = datetime.now()
 
 # setting config parser
 config = configparser.ConfigParser()
@@ -23,6 +25,7 @@ pagenum = 0
 errors = 0
 post_total = 0
 image_total = 0
+links = []
 
 while day > 5:
     # get all submissions from an account
@@ -49,6 +52,7 @@ while day > 5:
                 print('Images:{')
                 for image in images:
                     print(image.link)
+                    links.append(image.link)
                     image_total += 1
                 print('}')
                 print(f'Item number: {item_num}')
@@ -74,10 +78,19 @@ while day > 5:
     #print(f'TESTING: {pagenum}')
 
 
-print('---RESULTS---')
+print('\n\n\n\n---RESULTS---')
 print(f'Total posts: {item_num}')
 print(f'Total images: {image_total}')
-print(f'Errors: {errors}')
+print(f'Errors: {errors}\n\n\n\n')
+
+print('Writing to file...')
+
+file1 = open(r'links.txt', 'a')
+for f_link in links:
+    file1.write(f'{f_link}\n')
+file1.close()
+
+print(f'Finished in {datetime.now() - start_time}')
 
 
 
